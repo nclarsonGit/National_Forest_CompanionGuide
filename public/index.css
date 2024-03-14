@@ -1,0 +1,48 @@
+#background{
+	margin : 5px 10px 5px 10px;
+	border: 2px solid black;
+	background-color: #FFEBCD;
+	display:  inline-block;
+	float: left;
+	padding: 10px;
+	width: 35%;
+	height: 50%;
+}
+
+#regions{
+	margin : 5px 10px 5px 10px;
+	border: 2px solid black;
+	background-color: #FFEBCD;
+	display:  inline-block;
+	float: right;
+	padding: 10px;
+	width: 55%;
+	height: 50%;
+}
+
+header{
+	font-size: 300%;
+	position: center;
+	left: 400px;
+}
+
+input[type=submit]{
+	background-color: #228B22;
+	border: none;
+	color: white;
+	padding: 16px 32px;
+	text-decoration: none;
+	margin: 4px 2px;
+	cursor: pointer;
+}
+
+#bucketList{
+	margin : 5px 10px 5px 10px;
+	border: 2px solid black;
+	background-color: #FFEBCD;
+	display:  inline-block;
+	float: left;
+	padding: 10px;
+	width: 35%;
+	height: 50%;
+}

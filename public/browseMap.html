@@ -1,0 +1,227 @@
+<!doctype html>
+<html>
+    <head>
+        <h1> Browse the Map Below</h1>
+        <link rel="stylesheet" type="text/css" href="browse.css">
+        <script src="socket.io/socket.io.js"></script>
+        <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css"
+        integrity="sha256-kLaT2GOSpHechhsozzB+flnD+zUyjE2LlfWPgU04xyI="
+        crossorigin=""/>
+        <script
+            src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js">
+        </script>
+        <!-- Make sure you put this AFTER Leaflet's CSS -->
+        <script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js"
+        integrity="sha256-WBkoXOwTeyKclOHuWtc+i2uENFpDZ9YPdf5Hf+D7ewM="
+        crossorigin=""></script>
+    </head>
+
+    <body>
+        <section id="map" 
+        style="margin : 5px 10px 5px 10px;
+                border: 2px solid black;
+                background-color: gray;
+                display: inline-block;
+                float: right;
+                padding: 10px;
+                width: 68%;
+                height: 700px;"
+        >
+        </section>
+        <section id="filters">
+            Select the different Forests and Grasslands so you can see where you've been and where to go next!
+            <br/>
+            On selected region, show checkboxes for all forests
+            <input type="button" value = "Color" id = "colorButton" />
+            <form
+                action='http://localhost:3011/'
+                method = 'get'>
+                <input type= 'submit' value = 'Return to Home' />
+            </form>
+            <input type="button" value = "Clear" id = "clearButton" />
+        </section>
+        <div class="dropdown">
+          <button onclick="myFunction()" class="dropbtn">Dropdown</button>
+          <div id="myDropdown" class="dropdown-content">
+            <a href="#">Region 1</a>
+            <a href="#">Region 2</a>
+            <a href="#">Region 3</a>
+            <a href="#">Region 4</a>
+            <a href="#">Region 5</a>
+            <a href="#">Region 6</a>
+            <a href="#">Region 7</a>
+            <a href="#">Region 8</a>
+            <a href="#">Region 9</a>
+          </div>
+        </div>
+
+        <script>
+            // Create dropdown 
+            // From https://www.w3schools.com/howto/howto_js_dropdown.asp
+            // ---------------------------------------------------------------------------
+            function myFunction() {
+              document.getElementById("myDropdown").classList.toggle("show");
+            }
+
+            // Close the dropdown menu if the user clicks outside of it
+            window.onclick = function(event) {
+              if (!event.target.matches('.dropbtn')) {
+                var dropdowns = document.getElementsByClassName("dropdown-content");
+                var i;
+                for (i = 0; i < dropdowns.length; i++) {
+                  var openDropdown = dropdowns[i];
+                  if (openDropdown.classList.contains('show')) {
+                    openDropdown.classList.remove('show');
+                  }
+                }
+              }
+            }
+            //--------------------------------------------------------------------------
+
+            // Initialize the map object
+            var map = L.map('map').setView([40.971604, -99.14604], 4);
+            // Add OpenStreetMap Tile Layer, this is the last step needed to have a working map
+            L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                maxZoom: 19,
+                attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+            }).addTo(map);
+
+
+            // All of the following is based on the Leaflet Choropleth Tutorial
+            //-----------------------------------------------------------------------------------
+            // Control that shows state info on hover
+            const info = L.control();
+
+            info.onAdd = function (map) {
+                this._div = L.DomUtil.create('div', 'info');
+                this.update();
+                return this._div;
+            };
+
+            info.update = function (props) {
+                const contents = props ? `<b>${props.COMMONNAME}</b><br />` : 'Hover over a forest';
+                this._div.innerHTML = `<h4>Forest/Grassland Name</h4>${contents}`;
+            };
+
+            info.addTo(map);
+
+            // Initialize a connection via Socket.io
+            // -------------------------------------
+            var socket = io.connect();
+
+            alert("Loading the boundaries will take a moment.");
+
+            // Sends a reminder that the browser is up and running. This is done to get 
+            // the ball rolling on mapping the forest boundaries.
+            socket.emit('reminder', { theMess: "The browser can hear!"});
+
+            // Code to create a hover legend in the top right and interaction with the map
+            // Also from the Leaflet Choropleth Tutorial: https://leafletjs.com/examples/choropleth/
+            // -----------------------------------------------------------------------------------
+            // Highlights the selected forest
+            function highlightFeature(e) {
+                var layer = e.target;
+
+                layer.setStyle({
+                     weight: 5,
+                     color: '#666',
+                     dashArray: '',
+                     fillOpacity: 0.7
+                });
+
+                layer.bringToFront();
+                info.update(layer.feature.properties.COMMONNAME);
+            }
+
+            // Dehighlights the forest
+            function resetHighlight(e) {
+                 borders.resetStyle(e.target);
+                info.update();
+            }
+
+            // Zooms in on the forest when clicked
+            function zoomToFeature(e) {
+                map.fitBounds(e.target.getBounds());
+            }
+            
+            // Binds the three functions above with mouse hovering over, mouse not hovering over, and click functions
+            function onEachFeatureHover(feature, layer) {
+                layer.on({
+                    mouseover: highlightFeature,
+                    mouseout: resetHighlight,
+                    click: zoomToFeature
+                });
+            }
+            //----------------------------------------------------------------------------------
+
+            //Gathers the emitted data from the server.
+            socket.on('forestData', function(data){ 
+                // Filters what is mapped based on the regional location of the wilderness area
+                L.geoJSON(data, {
+                    // Filters the data based on their region, as it should correspond to what the user selected.
+                    /*filter: function(feature, layer){
+                        if(feature.properties.REGION == '01'){
+                            return true;
+                        }
+                    },*/
+                    // Highlights National Forests in Red and National Grasslands in Blue
+                    style: function(feature) {
+                        switch (feature.properties.ADMINTYPE) {
+                            case 'National Forest': return {color: "#ff0000"};
+                            case 'National Grassland':   return {color: "#0000ff"};
+                        }
+                    },
+                }).addTo(map)
+
+                //Region 1: Northern Plains and Northeastern Rockies
+                //Region 2: Midwestern Plains/Colorado
+                //Region 3: Southwest
+                //Region 4: Utah/Mid-Southern Idaho/Western Wyoming/Nevada
+                //Region 5: California
+                //Region 6: Pacific Northwest
+                //Region 8: Southeast/Lower Appalachia
+                //Region 9: Eastern Midwest (Missouri->Minnesota)/Northeast
+                //Region 10: Alaska
+            });
+
+
+            // When this button is selected, it alerts the user first to how slow the process is.
+            // Otherwise, it communicates to the server that the filter has been selected.
+            $(function(){
+                $('#filterButton').click(function(){
+                    alert("Filter results submitted. We apologize, but this may take a moment.");
+                    socket.emit('filter', {theMess: "Filtering"});
+                });
+            });
+
+
+            // Binds the popups for every recreation activity to the description offered in the file.
+            // This makes it so that when the popups are clicked, you get a description of that recreational site.
+            // Some recreational sites do not have any further descriptions so those sites tell users that there is no 
+            // further information.
+            //--------------------------------------------------------------------------------------------------------
+            function onEachFeature(feature, layer) {
+                let popupContent = `<p></p>`;
+
+                if (feature.properties && feature.properties.RECAREA_DESCRIPTION != null) {
+                    popupContent += feature.properties.RECAREA_DESCRIPTION;
+                }
+                if(feature.properties && feature.properties.RECAREA_DESCRIPTION == null) {
+                    popupContent = "No further information provided."
+                }
+
+                layer.bindPopup(popupContent);
+            }
+    
+            // Clears the previous filter layer, but not all of the filter popups, just the previous one.
+            // So, if two filters are selected at different times without clearing in between, the clear button
+            // will only dispatch the more recent filter that was selected.
+            //-----------------------------------------------------------------------------------------------
+            $(function(){
+                $('#clearButton').click(function(){
+                    map.removeLayer(filterLayer);
+                });
+            });
+        </script>
+    </body>
+</html>

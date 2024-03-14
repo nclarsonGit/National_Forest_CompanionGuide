@@ -1,0 +1,127 @@
+<!--
+	Nick Larson
+	May 6th, 2023
+	WEB Programming Final Project - Home Page:
+	This final project encompasses
+-->
+<!doctype html>
+<html>
+    <head>
+        <script src="socket.io/socket.io.js"></script>
+        <link rel="stylesheet" type="text/css" href="index.css">
+        <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css"
+        integrity="sha256-kLaT2GOSpHechhsozzB+flnD+zUyjE2LlfWPgU04xyI="
+        crossorigin=""/>
+        <script
+			src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js">
+		</script>
+        <!-- Make sure you put this AFTER Leaflet's CSS -->
+        <script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js"
+        integrity="sha256-WBkoXOwTeyKclOHuWtc+i2uENFpDZ9YPdf5Hf+D7ewM="
+        crossorigin=""></script>
+        <!--link rel="stylesheet" type="text/css" href="index.css"-->
+
+        <script> 
+
+        </script>
+    </head>
+    <body>
+    	<header>
+    		Browse the United States National Forests and Grasslands
+    	</header>
+          <section id = "background">
+        	<h2> Why visit National Forests?</h2>
+        	<p>
+        		National Parks are the traditional spots that tourists and campers go on a wilderness vacation, you may have heard of Yosemite or Yellowstone. However, many people miss out on the beauty of National Forests that are often located in similar ecological areas of famous National Parks. So, the question becomes, why visit a National Forest when you could go to Yellowstone and see Old Faithful? There are many reasons that make National Forests and even more intriguing option than National Parks. First, National Forests are largely free, as opposed to entry and campground fees that parks impose. This is due to the fact that National Parks largely focus on the preservation of the land, so measures are taken to ensure such preservation. National Forests, however, do have a focus on preservation, but they also have a focus on conservation and thus allow commercial activites to take place.
+        	</p>
+        </section>
+
+        <section id = 'regions'>
+        	<h2>The National Forest Service has split up the United States Forest system into 9 regions. Click the buttons below to explore each one individually!</h2>
+        	<div class = "region-north"/>
+	        	<form ref='north'
+	        		id ='north'
+	        		action='http://localhost:3011/north.html'
+	        		method = 'get'>
+	        		<input type= 'submit' value = 'Visit the North' />
+	        	</form>
+        	</div>
+        	<div class = "region-south"/>
+	        	<form ref='south'
+	        		id ='south'
+	        		action='http://localhost:3011/south.html'
+	        		method = 'get'>
+	        		<input type= 'submit' value = 'Visit the South' />
+	        	</form>
+	        </div>
+        	<div class = "region-midwest"/>
+	        	<form ref='midwest'
+	        		id ='midwest'
+	        		action='http://localhost:3011/midwest.html'
+	        		method = 'get'>
+	        		<input type= 'submit' value = 'Visit the Midwest' />
+	        	</form>
+	        </div>
+        	<div class = "region-southwest"/>
+	        	<form ref='southwest'
+	        		id ='southwest'
+	        		action='http://localhost:3011/southwest.html'
+	        		method = 'get'>
+	        		<input type= 'submit' value = 'Visit the Southwest' />
+	        	</form>
+	        </div>
+        	<div class = "region-rockies"/>
+	        	<form ref='rockies'
+	        		id ='rockies'
+	        		action='http://localhost:3011/rockies.html'
+	        		method = 'get'>
+	        		<input type= 'submit' value = 'Visit the South/Central Rockies' />
+	        	</form>
+	        </div>
+        	<div class = "region-cali"/>
+	        	<form ref='cali'
+	        		id ='cali'
+	        		action='http://localhost:3011/cali.html'
+	        		method = 'get'>
+	        		<input type= 'submit' value = 'Visit California' />
+	        	</form>
+	        </div>
+        	<div class = "region-pnw"/>
+	        	<form ref='pnw'
+	        		id ='pnw'
+	        		action='http://localhost:3011/pnw.html'
+	        		method = 'get'>
+	        		<input type= 'submit' value = 'Visit the Pacific Northwest' />
+	        	</form>
+	        </div>
+        	<div class = "region-upperEast"/>
+	        	<form ref='east'
+	        		id ='east'
+	        		action='http://localhost:3011/upperEast.html'
+	        		method = 'get'>
+	        		<input type= 'submit' value = 'Visit Central and Northeast' />
+	        	</form>
+	        </div>
+        	<div class = "region-alaska"/>
+	        	<form ref='alaska'
+	        		id ='alaska'
+	        		action='http://localhost:3011/alaska.html'
+	        		method = 'get'>
+	        		<input type= 'submit' value = 'Visit Alaska' />
+	        	</form>
+        	</div>
+        </section>
+        
+        <section id = "bucketList">
+        	<h2> For the Camping Bucketlister: </h2>
+        	Want to get a look at the map in it's entirety? On a quest to visit as many as you can? Clicking the button below will allow all of that!
+        	<br/>
+        	<form ref='browse'
+	        	id ='browse'
+	        	action='http://localhost:3011/browseMap.html'
+	        	method = 'get'>
+	        	<input type= 'submit' value = 'View Map' />
+	        </form>
+        </section>
+    </body>
+</html>

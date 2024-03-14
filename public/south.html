@@ -1,0 +1,255 @@
+<!doctype html>
+<html>
+    <head>
+        <h1> The South: From Texas, to Florida, to Lower Appalachia</h1>
+        <script src="socket.io/socket.io.js"></script>
+        <link rel="stylesheet" type="text/css" href="region.css">
+        <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css"
+        integrity="sha256-kLaT2GOSpHechhsozzB+flnD+zUyjE2LlfWPgU04xyI="
+        crossorigin=""/>
+        <script
+            src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js">
+        </script>
+        <!-- Make sure you put this AFTER Leaflet's CSS -->
+        <script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js"
+        integrity="sha256-WBkoXOwTeyKclOHuWtc+i2uENFpDZ9YPdf5Hf+D7ewM="
+        crossorigin=""></script>
+    </head>
+    <body>
+        <section id="map" 
+        style="margin : 5px 10px 5px 10px;
+                border: 2px solid black;
+                background-color: gray;
+                display: inline-block;
+                float: right;
+                padding: 10px;
+                width: 68%;
+                height: 700px;"
+        >
+        </section>
+        <section id="filters">
+            Select the filters below to display different recreational sites. Fair warning: if more than one is selected, the browser may move slowly.
+            <br/>
+            <input type="checkbox" id="camp"/>
+            <label id = "check1" for="camp">Campgrounds</label>
+            <br/>
+            <input type="checkbox" id="hike"/>
+            <label id = "check2" for="hike">Trailheads</label>
+            <br/>
+            <input type="checkbox" id="fish"/>
+            <label id = "check3" for="fish">Fishing Sites</label>
+            <br/>
+            <input type="checkbox" id="swim"/>
+            <label id = "check4" for="swim">Swimming Sites</label>
+            <br/>
+            <input type="checkbox" id="climb"/>
+            <label id = "check5" for="climb">Climbing Areas</label>
+            <br/>
+            <input type="checkbox" id="horse"/>
+            <label id = "check6" for="horse">Horse Camps</label>
+            <br/>
+            <input type="checkbox" id="lookout"/>
+            <label id = "check7" for="lookout">Lookouts Towers and Cabins</label>
+            <br/>
+            <input type="checkbox" id="targets"/>
+            <label id = "check8" for="targets">Target Ranges</label>
+            <br/>
+            <input type="checkbox" id="observe"/>
+            <label id = "check9" for="observe">Scenic Observation Sites</label>
+            <br/>
+            <input type="checkbox" id="skiNordic"/>
+            <label id = "check10" for="skiNordic">Nordic Skiing</label>
+            <br/>
+            <input type="checkbox" id="skiAlpine"/>
+            <label id = "check11" for="skiAlpine">Alpine Skiing</label>
+            <br/>
+            <input type="checkbox" id="boat"/>
+            <label id = "check12" for="boat">Boating Sites</label>
+            <br/>
+            <input type="button" value = "Filter" id = "filterButton" />
+            <form
+                action='http://localhost:3011/'
+                method = 'get'>
+                <input type= 'submit' value = 'Return to Home' />
+            </form>
+            <input type="button" value = "Clear" id = "clearButton" />
+        </section>
+
+        <script>
+            // Initialize the map object
+            var map = L.map('map').setView([32.787275, -85.341797], 5);
+            // Add OpenStreetMap Tile Layer, this is the last step needed to have a working map
+            L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                maxZoom: 19,
+                attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+            }).addTo(map);
+
+            // Initialize a connection via Socket.io
+            // -------------------------------------
+            var socket = io.connect();
+
+            alert("Loading the boundaries will take a moment.");
+
+            socket.emit('reminder', { theMess: "The browser can hear!"});
+
+            socket.on('forestData', function(data){
+                // Filters what is mapped based on the regional location of the wilderness area
+                L.geoJSON(data, {
+                    filter: function(feature, layer){
+                        if(feature.properties.REGION == '08'){
+                            return true;
+                        }
+                    },
+                    style: function(feature) {
+                        switch (feature.properties.ADMINTYPE) {
+                            case 'National Forest': return {color: "#ff0000"};
+                            case 'National Grassland':   return {color: "#0000ff"};
+                        }
+                    },
+                }).addTo(map)
+
+                //Region 1: Northern Plains and Northeastern Rockies
+                //Region 2: Midwestern Plains/Colorado
+                //Region 3: Southwest
+                //Region 4: Utah/Mid-Southern Idaho/Western Wyoming/Nevada
+                //Region 5: California
+                //Region 6: Pacific Northwest
+                //Region 8: Southeast/Lower Appalachia
+                //Region 9: Eastern Midwest (Missouri->Minnesota)/Northeast
+                //Region 10: Alaska
+            });
+
+            $(function(){
+                $('#filterButton').click(function(){
+                    alert("Filter results submitted. We apologize, but this may take a moment.");
+                    socket.emit('filter', {theMess: "Filtering"});
+                });
+            });
+
+            // Binds the popups for every recreation activity to the description offered in the file.
+            // This makes it so that when the popups are clicked, you get a description of that recreational site.
+            function onEachFeature(feature, layer) {
+                let popupContent = `<p></p>`;
+
+                if (feature.properties && feature.properties.RECAREA_DESCRIPTION != null) {
+                    popupContent += feature.properties.RECAREA_DESCRIPTION;
+                }
+                if(feature.properties && feature.properties.RECAREA_DESCRIPTION == null) {
+                    popupContent = "No further information provided."
+                }
+
+                layer.bindPopup(popupContent);
+            }
+
+            // Where all filtering takes place
+            socket.on('recData', function(data){
+                // Create a JSON object that contains elements of the filtering checkboxes.
+                // Used in filtering below to determine what is selected in the filter.
+                let filterResults ={
+                        campgrounds : $("#camp").prop('checked'),
+                        hiking: $("#hike").prop('checked'),
+                        fishing: $("#fish").prop('checked'),
+                        swimming: $("#swim").prop('checked'),
+                        climbing: $('#climb').prop('checked'),
+                        horses: $('#horse').prop('checked'),
+                        lookouts: $('#lookout').prop('checked'),
+                        target_range: $('#targets').prop('checked'),
+                        observation: $('#observe').prop('checked'),
+                        nordicSki: $('#skiNordic').prop('checked'),
+                        alpineSki: $('#skiAlpine').prop('checked'),
+                        boating: $('#boat').prop('checked'),
+                    }
+
+                L.geoJSON(data, {
+                    filter: function(feature, layer){
+                        if(filterResults.campgrounds){
+                            if(feature.properties.REGION == '08' && feature.properties.SITE_SUBTYPE == 'CAMPGROUND'){
+                                return true;
+                            }
+                        }
+                        if(filterResults.hiking){
+                            if(feature.properties.REGION == '08' && feature.properties.SITE_SUBTYPE == 'TRAILHEAD'){
+                                return true;
+                            }
+                        }
+                        if(filterResults.fishing){
+                            if(feature.properties.REGION == '08' && feature.properties.SITE_SUBTYPE == 'FISHING SITE'){
+                                return true;
+                            }
+                        }
+                        if(filterResults.swimming){
+                            if(feature.properties.REGION == '08' && feature.properties.SITE_SUBTYPE == 'SWIMMING SITE'){
+                                return true;
+                            }
+                        }
+                        if(filterResults.climbing){
+                            if(feature.properties.REGION == '08' && feature.properties.SITE_SUBTYPE == 'CLIMBING AREA'){
+                                return true;
+                            }
+                        }
+                        if(filterResults.horses){
+                            if(feature.properties.REGION == '08' && feature.properties.SITE_SUBTYPE == 'HORSE CAMP'){
+                                return true;
+                            }
+                        }
+                        if(filterResults.lookouts){
+                            if(feature.properties.REGION == '08' && feature.properties.SITE_SUBTYPE == 'LOOKOUT/CABIN'){
+                                return true;
+                            }
+                        }
+                        if(filterResults.target_range){
+                            if(feature.properties.REGION == '08' && feature.properties.SITE_SUBTYPE == 'TARGET RANGE'){
+                                return true;
+                            }
+                        }
+                        if(filterResults.observation){
+                            if(feature.properties.REGION == '08' && feature.properties.SITE_SUBTYPE == 'OBSERVATION SITE'){
+                                return true;
+                            }
+                        }
+                        if(filterResults.nordicSki){
+                            if(feature.properties.REGION == '08' && feature.properties.SITE_SUBTYPE == 'SKI AREA NORDIC'){
+                                return true;
+                            }
+                        }
+                        if(filterResults.alpineSki){
+                            if(feature.properties.REGION == '08' && feature.properties.SITE_SUBTYPE == 'SKI AREA ALPINE'){
+                                return true;
+                            }
+                        }
+                        if(filterResults.boating){
+                            if(feature.properties.REGION == '08' && feature.properties.SITE_SUBTYPE == 'BOATING SITE'){
+                                return true;
+                            }
+                        }
+                    },
+
+                    onEachFeature,
+                }).addTo(map);
+            });
+
+            // This version displays a pop-up on the map
+            var popup = L.popup();
+            function onMapClick(e) {
+                popup
+                    .setLatLng(e.latlng)
+                    .setContent("You clicked the map at " + e.latlng.toString())
+                    .openOn(map);
+            }
+
+            map.on('click', onMapClick);
+
+            // Clears the previous filter layer, but not all of the filter popups, just the previous one.
+            // So, if two filters are selected at different times without clearing in between, the clear button
+            // will only dispatch the more recent filter that was selected.
+            //-----------------------------------------------------------------------------------------------
+            $(function(){
+                $('#clearButton').click(function(){
+                    map.removeLayer(filterLayer);
+                });
+            });
+        </script>
+
+
+    </body>
+</html>
